@@ -7,6 +7,8 @@ use App\Http\Controllers\Web\SopWebController;
 use App\Http\Controllers\Web\ForumWebController;
 use App\Http\Controllers\Web\DiseaseScanWebController;
 use App\Http\Controllers\Web\UserWebController;
+use App\Http\Controllers\Web\ArticleImportController;
+
 
 // ============================================================
 // GUEST — Halaman login (redirect ke dashboard jika sudah login)
@@ -87,7 +89,7 @@ Route::middleware(['auth.web', 'role.web:pakar,admin'])
 
             return response()->json(['data' => $scans]);
         })->name('map-data');
-        
+
         // Users — hanya admin
         Route::middleware('role.web:admin')->group(function () {
             Route::get('/users',           [UserWebController::class, 'index'])->name('users.index');
@@ -95,5 +97,8 @@ Route::middleware(['auth.web', 'role.web:pakar,admin'])
             Route::post('/users',          [UserWebController::class, 'store'])->name('users.store');
             Route::patch('/users/{id}/role', [UserWebController::class, 'updateRole'])->name('users.role');
             Route::delete('/users/{id}',   [UserWebController::class, 'destroy'])->name('users.destroy');
+            Route::get('/articles/import',         [ArticleImportController::class, 'showForm'])->name('articles.import');
+            Route::post('/articles/import/preview', [ArticleImportController::class, 'preview'])->name('articles.import.preview');
+            Route::post('/articles/import/confirm', [ArticleImportController::class, 'confirm'])->name('articles.import.confirm');
         });
     });

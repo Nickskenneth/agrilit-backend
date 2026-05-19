@@ -5,9 +5,16 @@
 
     <div class="flex items-center justify-between mb-6">
         <div></div>
-        <a href="{{ route('admin.articles.create') }}" class="btn-primary flex items-center gap-2">
-            <span>+</span> Tulis Artikel Baru
-        </a>
+        <div class="flex gap-3">
+            {{-- Tombol import --}}
+            <a href="{{ route('admin.articles.import') }}" class="btn-secondary flex items-center gap-2">
+                📄 Import dari DOCX
+            </a>
+            {{-- Tombol tulis manual --}}
+            <a href="{{ route('admin.articles.create') }}" class="btn-primary flex items-center gap-2">
+                ✏️ Tulis Manual
+            </a>
+        </div>
     </div>
 
     {{-- Filter --}}
