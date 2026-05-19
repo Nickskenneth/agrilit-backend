@@ -42,9 +42,9 @@ class PlantDiseaseService
                 $data = $response->json();
                 return [
                     'success'          => true,
-                    'result_label'     => $data['label'],
-                    'result_label_id'  => $data['label_id'],
-                    'confidence_score' => $data['confidence'],
+                    'result_label'     => $data['prediction'],       // "Cabai_BacterialSpot"
+                    'result_label_id'  => $data['prediction_id'],    // "Bercak Bakteri pada Cabai"
+                    'confidence_score' => $data['confidence_normalized'], // 0.9234 (bukan 92.34)
                 ];
             }
 
@@ -55,7 +55,6 @@ class PlantDiseaseService
             ]);
 
             return $this->fallbackResponse();
-
         } catch (\Exception $e) {
             // FastAPI tidak bisa dijangkau (timeout, down, dll)
             Log::error('FastAPI unreachable', ['error' => $e->getMessage()]);
@@ -80,7 +79,7 @@ class PlantDiseaseService
             ],
             'jagung' => [
                 ['label' => 'Corn_(maize)___Common_rust_',       'label_id' => 'Karat Biasa pada Jagung', 'confidence' => 0.9012],
-                ['label' => 'Corn_(maize)___Northern_Leaf_Blight','label_id' => 'Hawar Daun Utara',       'confidence' => 0.8678],
+                ['label' => 'Corn_(maize)___Northern_Leaf_Blight', 'label_id' => 'Hawar Daun Utara',       'confidence' => 0.8678],
                 ['label' => 'Corn_(maize)___healthy',            'label_id' => 'Jagung Sehat',            'confidence' => 0.9789],
             ],
         ];

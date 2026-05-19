@@ -14,9 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Sanctum stateful domains untuk web (CMS Blade)
         $middleware->statefulApi();
+
         // Daftarkan alias middleware custom
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role'     => \App\Http\Middleware\CheckRole::class,
+            'auth.web' => \App\Http\Middleware\WebAuthenticate::class,
+            'role.web' => \App\Http\Middleware\WebCheckRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
