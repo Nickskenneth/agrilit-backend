@@ -84,7 +84,11 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         // Hapus hanya token yang sedang dipakai
-        $request->user()->currentAccessToken()->delete();
+        // Guard: currentAccessToken() bisa null saat auth via session (bukan Bearer token)
+        $token = $request->user()->currentAccessToken();
+        if ($token) {
+            $token->delete();
+        }
 
         return response()->json([
             'message' => 'Logout berhasil.',
