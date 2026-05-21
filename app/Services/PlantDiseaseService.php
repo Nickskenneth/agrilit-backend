@@ -23,13 +23,12 @@ class PlantDiseaseService
     // ============================================================
     public function predict(string $imagePath, string $commodity): array
     {
-        // Jika FastAPI belum jadi atau tidak bisa dijangkau,
-        // gunakan mock response agar development tidak terhenti
         if (config('services.fastapi.mock', true)) {
             return $this->mockResponse($commodity);
         }
 
         try {
+            // PENTING: commodity ada di URL path → /predict/cabai
             $response = Http::timeout(30)
                 ->attach(
                     'file',
@@ -40,24 +39,33 @@ class PlantDiseaseService
 
             if ($response->successful()) {
                 $data = $response->json();
+
+                Log::info('FastAPI prediction result', [
+                    'commodity_sent' => $commodity,
+                    'prediction'     => $data['prediction'] ?? 'null',
+                    'confidence'     => $data['confidence'] ?? 'null',
+                ]);
+
                 return [
                     'success'          => true,
-                    'result_label'     => $data['prediction'],       // "Cabai_BacterialSpot"
-                    'result_label_id'  => $data['prediction_id'],    // "Bercak Bakteri pada Cabai"
-                    'confidence_score' => $data['confidence_normalized'], // 0.9234 (bukan 92.34)
+                    'result_label'     => $data['prediction'],
+                    'result_label_id'  => $data['prediction_id'],
+                    'confidence_score' => $data['confidence_normalized'],
                 ];
             }
 
-            // FastAPI merespons tapi dengan error
             Log::warning('FastAPI error response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
+                'commodity_sent' => $commodity,
+                'status'         => $response->status(),
+                'body'           => $response->body(),
             ]);
 
             return $this->fallbackResponse();
         } catch (\Exception $e) {
-            // FastAPI tidak bisa dijangkau (timeout, down, dll)
-            Log::error('FastAPI unreachable', ['error' => $e->getMessage()]);
+            Log::error('FastAPI unreachable', [
+                'commodity_sent' => $commodity,
+                'error'          => $e->getMessage(),
+            ]);
             return $this->fallbackResponse();
         }
     }

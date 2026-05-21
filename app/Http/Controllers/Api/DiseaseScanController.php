@@ -33,7 +33,7 @@ class DiseaseScanController extends Controller
     public function scan(Request $request)
     {
         $validated = $request->validate([
-            'image'      => 'required|image|mimes:jpg,jpeg,png,webp|max:5120', // max 5MB
+            'image'      => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
             'commodity'  => 'required|in:cabai,kentang,jagung',
             'latitude'   => 'nullable|numeric|between:-90,90',
             'longitude'  => 'nullable|numeric|between:-180,180',
@@ -41,13 +41,24 @@ class DiseaseScanController extends Controller
             'notes'      => 'nullable|string|max:500',
         ]);
 
-        // Simpan gambar ke storage
+        // Simpan gambar
         $imagePath = $request->file('image')->store('scans', 'public');
 
-        // Kirim ke FastAPI (atau mock saat development)
-        $prediction = $this->diseaseService->predict($imagePath, $validated['commodity']);
+        // PENTING: commodity dari validated request dikirim ke FastAPI
+        // Ini yang memastikan /predict/cabai, bukan /predict
+        $prediction = $this->diseaseService->predict(
+            $imagePath,
+            $validated['commodity']  // ← Ini yang diteruskan ke FastAPI URL
+        );
 
-        // Simpan hasil scan ke database
+        // Log untuk debugging
+        Log::info('Scan request processed', [
+            'user_id'          => $request->user()->id,
+            'commodity_from_flutter' => $validated['commodity'],
+            'prediction_result'      => $prediction['result_label'] ?? 'null',
+            'prediction_success'     => $prediction['success'],
+        ]);
+
         $scan = DiseaseScan::create([
             'user_id'          => $request->user()->id,
             'image_path'       => $imagePath,
@@ -85,8 +96,8 @@ class DiseaseScanController extends Controller
             'scans'                  => 'required|array|min:1|max:20',
             'scans.*.commodity'      => 'required|in:cabai,kentang,jagung',
             'scans.*.result_label'   => 'nullable|string',
-            'scans.*.result_label_id'=> 'nullable|string',
-            'scans.*.confidence_score'=> 'nullable|numeric',
+            'scans.*.result_label_id' => 'nullable|string',
+            'scans.*.confidence_score' => 'nullable|numeric',
             'scans.*.latitude'       => 'nullable|numeric',
             'scans.*.longitude'      => 'nullable|numeric',
             'scans.*.scanned_at'     => 'required|date',
@@ -135,7 +146,7 @@ class DiseaseScanController extends Controller
     public function history(Request $request)
     {
         $query = DiseaseScan::where('user_id', $request->user()->id)
-                            ->orderBy('scanned_at', 'desc');
+            ->orderBy('scanned_at', 'desc');
 
         if ($request->filled('commodity')) {
             $query->forCommodity($request->commodity);
@@ -157,13 +168,18 @@ class DiseaseScanController extends Controller
     public function mapData(Request $request)
     {
         $query = DiseaseScan::withLocation()
-                            ->select([
-                                'id', 'commodity', 'result_label',
-                                'result_label_id', 'confidence_score',
-                                'latitude', 'longitude',
-                                'location_name', 'scanned_at',
-                            ])
-                            ->orderBy('scanned_at', 'desc');
+            ->select([
+                'id',
+                'commodity',
+                'result_label',
+                'result_label_id',
+                'confidence_score',
+                'latitude',
+                'longitude',
+                'location_name',
+                'scanned_at',
+            ])
+            ->orderBy('scanned_at', 'desc');
 
         if ($request->filled('commodity')) {
             $query->forCommodity($request->commodity);
@@ -181,7 +197,7 @@ class DiseaseScanController extends Controller
         $mapPoints = $scans->map(fn($scan) => [
             'id'             => $scan->id,
             'commodity'      => $scan->commodity,
-            'result_label_id'=> $scan->result_label_id,
+            'result_label_id' => $scan->result_label_id,
             'confidence'     => round($scan->confidence_score * 100, 1) . '%',
             'lat'            => (float) $scan->latitude,
             'lng'            => (float) $scan->longitude,
@@ -199,7 +215,7 @@ class DiseaseScanController extends Controller
     public function show(Request $request, string $id)
     {
         $scan = DiseaseScan::where('user_id', $request->user()->id)
-                           ->findOrFail($id);
+            ->findOrFail($id);
 
         return $this->successResponse(new DiseaseScanResource($scan));
     }

@@ -34,6 +34,13 @@ Route::middleware(['auth.web', 'role.web:pakar,admin'])
         Route::get('/articles',           [ArticleWebController::class, 'index'])->name('articles.index');
         Route::get('/articles/create',    [ArticleWebController::class, 'create'])->name('articles.create');
         Route::post('/articles',          [ArticleWebController::class, 'store'])->name('articles.store');
+
+        // Import Articles (Harus diletakkan sebelum route {id} agar tidak bentrok)
+        Route::get('/articles/import',          [ArticleImportController::class, 'showForm'])->name('articles.import');
+        Route::post('/articles/import/parse',   [ArticleImportController::class, 'preview'])->name('articles.import.parse');
+        Route::post('/articles/import/confirm', [ArticleImportController::class, 'confirm'])->name('articles.import.confirm');
+
+        // Articles Detail / Action
         Route::get('/articles/{id}/edit', [ArticleWebController::class, 'edit'])->name('articles.edit');
         Route::put('/articles/{id}',      [ArticleWebController::class, 'update'])->name('articles.update');
         Route::delete('/articles/{id}',   [ArticleWebController::class, 'destroy'])->name('articles.destroy');
@@ -97,8 +104,5 @@ Route::middleware(['auth.web', 'role.web:pakar,admin'])
             Route::post('/users',          [UserWebController::class, 'store'])->name('users.store');
             Route::patch('/users/{id}/role', [UserWebController::class, 'updateRole'])->name('users.role');
             Route::delete('/users/{id}',   [UserWebController::class, 'destroy'])->name('users.destroy');
-            Route::get('/articles/import',         [ArticleImportController::class, 'showForm'])->name('articles.import');
-            Route::post('/articles/import/preview', [ArticleImportController::class, 'preview'])->name('articles.import.preview');
-            Route::post('/articles/import/confirm', [ArticleImportController::class, 'confirm'])->name('articles.import.confirm');
         });
     });
