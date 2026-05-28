@@ -7,12 +7,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "http-interop/http-factory-guzzle": "*",
+        "http-interop/http-factory-guzzle": "^1.2",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.0",
-        "laravel/scout": "*",
+        "laravel/scout": "^11.2",
         "laravel/tinker": "^3.0",
-        "meilisearch/meilisearch-php": "*",
+        "meilisearch/meilisearch-php": "^1.16",
         "phpoffice/phpword": "^1.4"
     },
     "require-dev": {
