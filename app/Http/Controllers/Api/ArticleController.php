@@ -24,36 +24,48 @@ class ArticleController extends Controller
     // ============================================================
     public function index(Request $request)
     {
+        $perPage   = min($request->get('per_page', 10), 50);
+        $keyword   = $request->filled('search') ? trim($request->search) : null;
+        $commodity = $request->filled('commodity') ? $request->commodity : null;
+        $category  = $request->filled('category')  ? $request->category  : null;
+
+        // ============================================================
+        // SEARCH PATH — gunakan Meilisearch via Laravel Scout
+        // Aktif hanya saat ada keyword pencarian.
+        // Meilisearch memberikan: typo tolerance, partial match,
+        // dan pencarian ke dalam isi artikel (content_plain).
+        // ============================================================
+        if ($keyword) {
+            $scoutQuery = Article::search($keyword)
+                ->query(fn ($q) => $q->with('author')->published());
+
+            // Filter komoditas & kategori via Meilisearch filterable attributes
+            if ($commodity) $scoutQuery->where('commodity', $commodity);
+            if ($category)  $scoutQuery->where('category',  $category);
+
+            $articles = $scoutQuery->paginate($perPage);
+
+            return $this->paginatedResponse($articles->through(
+                fn($article) => new ArticleResource($article)
+            ));
+        }
+
+        // ============================================================
+        // BROWSE PATH — tidak ada keyword, gunakan Eloquent biasa
+        // Lebih efisien untuk listing & filtering tanpa pencarian teks.
+        // ============================================================
         $query = Article::published()
                         ->with('author')
                         ->orderBy('published_at', 'desc');
 
-        // Filter komoditas
-        if ($request->filled('commodity')) {
-            $query->forCommodity($request->commodity);
-        }
-
-        // Filter kategori
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
-        }
-
-        // Pencarian judul & konten
-        if ($request->filled('search')) {
-            $keyword = $request->search;
-            $query->where(function ($q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%")
-                  ->orWhere('excerpt', 'like', "%{$keyword}%");
-            });
-        }
+        if ($commodity) $query->forCommodity($commodity);
+        if ($category)  $query->where('category', $category);
 
         // Offline sync delta — hanya artikel yang diupdate setelah timestamp tertentu
-        // Flutter mengirim timestamp terakhir sync, server kembalikan yang lebih baru saja
         if ($request->filled('updated_after')) {
             $query->updatedAfter($request->updated_after);
         }
 
-        $perPage  = min($request->get('per_page', 10), 50); // max 50 per request
         $articles = $query->paginate($perPage);
 
         return $this->paginatedResponse($articles->through(

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Laravel\Scout\Searchable;
 
 class Article extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Searchable;
 
     protected $fillable = [
         'author_id',
@@ -83,6 +84,37 @@ class Article extends Model
     public function reads()
     {
         return $this->hasMany(ArticleRead::class);
+    }
+
+    // =====================
+    // SCOUT — Meilisearch
+    // =====================
+
+    /**
+     * Field yang di-index ke Meilisearch.
+     * content_plain = HTML stripped → plain text agar keyword dalam isi artikel
+     * bisa ditemukan tanpa noise dari tag HTML.
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id'            => $this->id,
+            'title'         => $this->title,
+            'excerpt'       => $this->excerpt ?? '',
+            'content_plain' => strip_tags($this->content ?? ''),
+            'category'      => $this->category,
+            'commodity'     => $this->commodity,
+            'is_published'  => $this->is_published,
+        ];
+    }
+
+    /**
+     * Hanya artikel yang sudah dipublish yang masuk ke index Meilisearch.
+     * Artikel draft tidak akan pernah muncul di hasil pencarian.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->is_published;
     }
 
     // =====================
