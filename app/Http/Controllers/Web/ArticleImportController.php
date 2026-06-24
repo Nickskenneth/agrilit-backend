@@ -37,7 +37,7 @@ class ArticleImportController extends Controller
         // Simpan file sementara
         $file     = $request->file('docx_file');
         $tempPath = $file->store('imports/temp', 'local');
-        $fullPath = storage_path('app/' . $tempPath);
+        $fullPath = \Storage::disk('local')->path($tempPath);
 
         // Parse dokumen
         $parsed = $this->importService->parse($fullPath);
