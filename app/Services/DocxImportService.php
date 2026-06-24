@@ -6,6 +6,7 @@ use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\Element\TextRun;
 use PhpOffice\PhpWord\Element\Text;
 use PhpOffice\PhpWord\Element\ListItem;
+use PhpOffice\PhpWord\Element\ListItemRun;
 use PhpOffice\PhpWord\Element\Title;
 
 class DocxImportService
@@ -104,7 +105,7 @@ class DocxImportService
                     $this->parseMeta($result, $text);
                 } else {
                     // Elemen list → tambah bullet
-                    if ($element instanceof ListItem) {
+                    if ($element instanceof ListItem || $element instanceof ListItemRun) {
                         $currentContent[] = '• ' . trim($text);
                     } else {
                         $currentContent[] = trim($text);
@@ -251,7 +252,7 @@ class DocxImportService
     {
         // Cek via Title element (cara paling reliable di PhpWord)
         if ($element instanceof Title) {
-            $depth = $element->getDepth();
+            $depth = (int) $element->getDepth();
             if ($depth === 1) return 'h1';
             if ($depth === 2) return 'h2';
             return null;
