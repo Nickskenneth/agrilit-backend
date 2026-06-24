@@ -141,7 +141,7 @@
                        class="w-16 form-input text-center py-1 px-2 text-sm">
             </td>
             <td class="px-3 py-2">
-                <input type="number" min="1" max="4" value="${row.week || ''}"
+                <input type="number" min="1" value="${row.week || ''}"
                        onchange="calendarData[${idx}].week=parseInt(this.value)"
                        class="w-16 form-input text-center py-1 px-2 text-sm">
             </td>
