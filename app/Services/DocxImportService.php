@@ -48,7 +48,7 @@ class DocxImportService
             }
 
             return $this->extractContent($elements);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return ['errors' => ['Gagal membaca file: ' . $e->getMessage()]];
         }
     }
@@ -282,7 +282,7 @@ class DocxImportService
     {
         // Title element
         if ($element instanceof Title) {
-            $titleEl = $element->getTextObject();
+            $titleEl = $element->getText();
             if ($titleEl instanceof TextRun) {
                 return $this->extractFromTextRun($titleEl);
             }
