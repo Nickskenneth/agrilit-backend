@@ -151,7 +151,7 @@
         {{-- Upload form --}}
         <div class="card">
             <h3 class="font-semibold text-gray-800 mb-4">Upload File</h3>
-            <form method="POST" action="{{ route('admin.articles.import.preview') }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('admin.articles.import.parse') }}" enctype="multipart/form-data">
                 @csrf
 
                 <div class="border-2 border-dashed border-gray-300 rounded-xl
